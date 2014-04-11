@@ -90,14 +90,9 @@ public class MyMap <K, V> {
 	 */
 	private void expandIfNecessary() {
         int curSize = buckets.length;
-        double full = 0;
-        for (int i = 0; i<curSize; i++){
-            List<MyEntry<K,V>> bucket = buckets[i];
-            if (!bucket.isEmpty()){
-                full++;
-            }
-        }
-        if (full/curSize>=loadFactor){
+        double entries = numEntries;
+        double percentFull = entries/curSize;
+        if (percentFull>loadFactor){
             List<MyEntry<K, V>> [] old = buckets;
             buckets = newArrayOfEntries(curSize*2);
             int transferred = 0;
@@ -107,8 +102,10 @@ public class MyMap <K, V> {
                     for (int j = 0; j<bucket.size(); j++){
                         MyEntry<K,V> data = bucket.get(j);
                         K key = data.getKey();
-                        V val = data.getValue();
-                        put(key, val);
+                        int code = Math.abs(key.hashCode());
+                        int index = code%buckets.length;
+                        List<MyEntry<K,V>> newHome = buckets[index];
+                        newHome.add(data);
                         transferred++;
                     }
                 }
@@ -116,10 +113,10 @@ public class MyMap <K, V> {
                     break;
                 }
             }
-
         }
 	}
-	
+
+
 	/**
 	 * Returns an array of the specified size, each
 	 * containing an empty linked list that can be
