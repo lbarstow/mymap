@@ -45,8 +45,23 @@ public class MyMap <K, V> {
 	 */
 	public void put(K key, V value) {
 		expandIfNecessary();
-		
-		// TODO: Store the key.
+        int code = Math.abs(key.hashCode());
+        int index = code%buckets.length;
+        List<MyEntry<K,V>> bucket = buckets[index];
+        boolean in = false;
+        for (int i = 0; i<bucket.size(); i++){
+            MyEntry<K,V> entry = bucket.get(i);
+            if (key.equals(entry.getKey())){
+                in = true;
+                entry.setValue(value);
+                break;
+            }
+        }
+        if (!in){
+            MyEntry<K,V> pair = new MyEntry<>(key, value);
+            bucket.add(pair);
+            numEntries++;
+        }
 	}
 	
 	/**
@@ -57,7 +72,16 @@ public class MyMap <K, V> {
 	 * @return
 	 */
 	public V get(K key) {
-		// TODO: retrieve the key.
+        int code = Math.abs(key.hashCode());
+        int index = code%buckets.length;
+        List<MyEntry<K,V>> bucket = buckets[index];
+        for (int i = 0; i<bucket.size(); i++){
+            MyEntry<K,V> entry = bucket.get(i);
+            if (key.equals(entry.getKey())){
+                V value = entry.getValue();
+                return value;
+            }
+        }
 		return null;
 	}
 	
@@ -65,7 +89,35 @@ public class MyMap <K, V> {
 	 * Expands the table to double the size, if necessary.
 	 */
 	private void expandIfNecessary() {
-		// TODO: expand if necessary
+        int curSize = buckets.length;
+        double full = 0;
+        for (int i = 0; i<curSize; i++){
+            List<MyEntry<K,V>> bucket = buckets[i];
+            if (!bucket.isEmpty()){
+                full++;
+            }
+        }
+        if (full/curSize>=loadFactor){
+            List<MyEntry<K, V>> [] old = buckets;
+            buckets = newArrayOfEntries(curSize*2);
+            int transferred = 0;
+            for (int i = 0; i<curSize; i++){
+                List<MyEntry<K,V>> bucket = old[i];
+                if (!bucket.isEmpty()){
+                    for (int j = 0; j<bucket.size(); j++){
+                        MyEntry<K,V> data = bucket.get(j);
+                        K key = data.getKey();
+                        V val = data.getValue();
+                        put(key, val);
+                        transferred++;
+                    }
+                }
+                if(transferred == numEntries){
+                    break;
+                }
+            }
+
+        }
 	}
 	
 	/**
